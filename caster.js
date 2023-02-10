@@ -176,7 +176,7 @@ class Renderer {
         let slice = 1 / (bottom - top);
         let cuttTop = 0;
         top = Math.round(top);
-        bottom = Math.round(Math.min(bottom, GH-1));
+        bottom = Math.round(Math.min(bottom, GH));
         if (top < 0) {
           cuttTop = -top;
           top = 0;
