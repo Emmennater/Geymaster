@@ -14,14 +14,14 @@ class Player {
   isColliding(px, py) {
     let br = floor(this.y);
     let bc = floor(this.x);
-    
+
     if (!maze.grid[br]) return false;
     if (!maze.grid[br][bc]) return false;
     if (maze.grid[br][bc].type == WALL) {
       let pbr = floor(py);
       let pbc = floor(px);
-      let rw = maze.grid[pbr][bc].type == WALL;
-      let cw = maze.grid[br][pbc].type == WALL;
+      let rw = maze.grid[pbr] ? (maze.grid[pbr][bc] ? maze.grid[pbr][bc].type == WALL : false) : false;
+      let cw = maze.grid[br][pbc] ? maze.grid[br][pbc].type == WALL : false;
       if (rw && cw) return true;
       return rw ? 'y' : 'x';
     }
@@ -125,9 +125,12 @@ class Renderer {
   render() {
     
     const ANG = this.entity.a;
-    const FOV = lerp(this.entity.fov, this.entity.fov * width / height, 0.2);
-    const HEIGHT = lerp(WALL_HEIGHT, WALL_HEIGHT * width / height, 0.8) * this.size / 200;
-    
+    const FOV = lerp(this.entity.fov, this.entity.fov * width / height, 0.0);
+    const VFOV = FOV * height / width;
+    const HEIGHT = lerp(WALL_HEIGHT, WALL_HEIGHT * width / height, 1.0) * this.size / 200;
+    const GW = this.graphic.width;
+    const GH = this.graphic.height;
+
     this.graphic.clear();
     this.graphic.fill(10);
     this.graphic.noStroke();
@@ -138,66 +141,90 @@ class Renderer {
     for (let c=0; c<this.size; c++) {
       let a = c / this.size * FOV;
       let ang = ANG + (a)*(PI/180) - FOV / 2 * (PI/180);
-      
+      let top, bottom;
+
       // Cast ray
       let pt = this.castRay(this.entity.x, this.entity.y, ang);
-      if (pt === false) continue;
+      if (pt !== false) {
       
-      // Correct fish-eye
-      let DIST = Math.sqrt(pt.x ** 2 + pt.y ** 2);
-      let adiff = angleDifference(ANG, ang);
-      DIST = DIST * Math.cos(adiff);
-      
-      // Calculate column
-      let H = HEIGHT / DIST;
-      let B = map(255 / (DIST ** 2 + 1), 255, 0, 255, 50);
-      let BC = constrain(B, 0, 255);
-      let BR = BC / 255;
-      let C1 = color(min(BR, 0.5) * 150);
-      let C2 = color(87 * BR, 64 * BR, 43 * BR);
-      let C3 = color(194 * BR, 252 * BR, 247 * BR);
-      let C4 = color(0);
-      let { col, rgb } = multiLerp2(
-        [color(200, 0, 0), 1, 0.2],
-        [color(200, 100, 40), 1, 0.35],
-        [color(200, 160, 50), 1, 0.5],
-        [C1, 1, 0],
-        BR
-      );
-      
-      // Draw column
-      const GW = this.graphic.width;
-      const GH = this.graphic.height;
-      let entityHeightRatio = (this.entity.h / WALL_HEIGHT);
-      let bottom = GH/2 + H/2 * (entityHeightRatio);
-      let top = GH/2 - H/2 * (1 - entityHeightRatio);
-      let slice = 1 / (bottom - top);
-      let cuttTop = 0;
-      top = Math.round(top);
-      bottom = Math.round(Math.min(bottom, GH-1));
-      if (top < 0) {
-        cuttTop = -top;
-        top = 0;
-      }
-      
-      for (let r=top; r<bottom; r++) {
-        let pi = (r * GW + c) * 4;
-        let dim = 1;
-        let ratioy = (r - top + cuttTop) * slice;
-        let ratiox = pt.rx;
+        // Correct fish-eye
+        let DIST = Math.sqrt(pt.x ** 2 + pt.y ** 2);
+        let adiff = angleDifference(ANG, ang);
+        // DIST = DIST * Math.cos(adiff);
         
+        // Calculate column
+        let H = HEIGHT / DIST;
+        let B = map(255 / (DIST ** 2 + 1), 255, 0, 255, 50);
+        let BC = constrain(B, 0, 255);
+        let BR = BC / 255;
+        let C1 = color(min(BR, 0.5) * 150);
+        let C2 = color(87 * BR, 64 * BR, 43 * BR);
+        let C3 = color(194 * BR, 252 * BR, 247 * BR);
+        let C4 = color(0);
+        let { col, rgb } = multiLerp2(
+          [color(200, 0, 0), 1, 0.2],
+          [color(200, 100, 40), 1, 0.35],
+          [color(200, 160, 50), 1, 0.5],
+          [C1, 1, 0],
+          BR
+        );
+        
+        // Draw column
+        let entityHeightRatio = (this.entity.h / WALL_HEIGHT);
+        bottom = GH/2 + H/2 * (entityHeightRatio);
+        top = GH/2 - H/2 * (1 - entityHeightRatio);
+        let slice = 1 / (bottom - top);
+        let cuttTop = 0;
+        top = Math.round(top);
+        bottom = Math.round(Math.min(bottom, GH-1));
+        if (top < 0) {
+          cuttTop = -top;
+          top = 0;
+        }
+        
+        // Wall
+        for (let r=top; r<bottom; r++) {
+          let pxi = (r * GW + c) * 4;
+          let ratioy = (r - top + cuttTop) * slice;
+          let ratiox = pt.rx;
+          
+          // Stretch image
+          let txrcol = this.txr[
+            Math.round((this.txr.length - 1) * ratiox)][
+            Math.round((this.txr[0].length - 1) * ratioy)
+          ];
+          
+          this.graphic.pixels[pxi+0] = (txrcol[0] / 255) * (rgb.r / 255) * 255;
+          this.graphic.pixels[pxi+1] = (txrcol[1] / 255) * (rgb.g / 255) * 255;
+          this.graphic.pixels[pxi+2] = (txrcol[2] / 255) * (rgb.b / 255) * 255;
+          this.graphic.pixels[pxi+3] = 255;
+        }
+
+      } else {
+        top = GH/2;
+        bottom = GH/2;
+      }
+
+      // Floor
+      for (let r=bottom; r<GH; r++) {
+        let va = 90.7 - (r / GH * VFOV - VFOV/2);
+        let pxi = (r * GW + c) * 4;
+        let pos = intersectingRayFloor({x:this.entity.x, y:this.entity.y, z:this.entity.h / WALL_HEIGHT}, va, ang * (180/PI));
+        let dim = 1;
+        let d = 1 / (pos.t ** 2);
+        pos.x = (pos.x % 1 + 1) % 1;
+        pos.y = (pos.y % 1 + 1) % 1;
+
         // Stretch image
         let txrcol = this.txr[
-          Math.round((this.txr.length - 1) * ratiox)][
-          Math.round((this.txr[0].length - 1) * ratioy)
+          Math.round((this.txr.length - 1) * pos.x)][
+          Math.round((this.txr[0].length - 1) * pos.y)
         ];
-        
-        // if (ratiox % 0.5 > 0.25 ^ ratioy % 0.5 > 0.25) dim = 0.8;
-        
-        this.graphic.pixels[pi+0] = (txrcol[0] / 255) * (rgb.r / 255) * dim * 255;
-        this.graphic.pixels[pi+1] = (txrcol[1] / 255) * (rgb.g / 255) * dim * 255;
-        this.graphic.pixels[pi+2] = (txrcol[2] / 255) * (rgb.b / 255) * dim * 255;
-        this.graphic.pixels[pi+3] = 255;
+
+        this.graphic.pixels[pxi+0] = txrcol[0] * d * 0.5;
+        this.graphic.pixels[pxi+1] = txrcol[1] * d * 0.5;
+        this.graphic.pixels[pxi+2] = txrcol[2] * d * 0.5;
+        this.graphic.pixels[pxi+3] = 255;
       }
       
       // this.graphic.fill(rgb.r, rgb.g, rgb.b);

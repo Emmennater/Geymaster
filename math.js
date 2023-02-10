@@ -143,6 +143,42 @@ function bresenhamFloat3D(gx0, gy0, gz0, gx1, gy1, gz1, grid) {
   return { plots, pt };
 }
 
+function intersectingRayFloor(initialPosition, verticalAngle, horizontalAngle) {
+  // Convert vertical and horizontal angles to radians
+  const va = (verticalAngle * Math.PI) / 180;
+  const ha = (horizontalAngle * Math.PI) / 180;
+  const h = initialPosition.z;
+
+  let t = h / Math.cos(va);
+  let d = va == 0 ? 0 : h * Math.tan(va);
+  let x = Math.cos(ha) * d + initialPosition.x;
+  let y = Math.sin(ha) * d + initialPosition.y;
+  
+  return { x, y, t };
+}
+
+function testIntersectingRay() {
+  const initialPosition = { x: 0, y: 0, z: 10 };
+
+  // Test case 1: vertical angle = 0, horizontal angle = 0
+  let verticalAngle = 0.01;
+  let horizontalAngle = 0;
+  const expectedOutput1 = { x: 0, y: 0 };
+  const result1 = intersectingRayFloor(initialPosition, verticalAngle, horizontalAngle);
+  console.assert(result1.x == expectedOutput1.x && result1.y == expectedOutput1.y, `Test case 1 failed: expected ${expectedOutput1.x} ${expectedOutput1.y}, but got ${result1.x} ${result1.y}`);
+
+  // Test case 2: vertical angle = 45, horizontal angle = 45
+  verticalAngle = 45;
+  horizontalAngle = 45;
+  const expectedOutput2 = { x: 7.0710678118654755, y: 7.0710678118654755 };
+  const result2 = intersectingRayFloor(initialPosition, verticalAngle, horizontalAngle);
+  console.assert(result2.x == expectedOutput2.x && result2.y == expectedOutput2.y, `Test case 1 failed: expected ${expectedOutput2.x} ${expectedOutput2.y}, but got ${result2.x} ${result2.y}`);
+
+  // Add more test cases as necessary to cover different scenarios and edge cases
+
+  console.log("All test cases passed");
+}
+
 /*
 
 
