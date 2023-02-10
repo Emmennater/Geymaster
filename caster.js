@@ -20,7 +20,10 @@ class Player {
     if (maze.grid[br][bc].type == WALL) {
       let pbr = floor(py);
       let pbc = floor(px);
-      return maze.grid[pbr][bc].type == WALL ? 'y' : 'x';
+      let rw = maze.grid[pbr][bc].type == WALL;
+      let cw = maze.grid[br][pbc].type == WALL;
+      if (rw && cw) return true;
+      return rw ? 'y' : 'x';
     }
     
     return false;
@@ -56,10 +59,9 @@ class Player {
     // Check for collision
     let direction;
     if (direction = this.isColliding(px, py)) {
-      if (direction == 'y') this.x = px;
-      else this.y = py;
+      if (direction != 'x') this.x = px;
+      if (direction != 'y') this.y = py;
     }
-    
   }
   
   draw(x, y, s) {
