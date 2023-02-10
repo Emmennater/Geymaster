@@ -211,9 +211,10 @@ class Renderer {
         let pxi = (r * GW + c) * 4;
         let pos = intersectingRayFloor({x:this.entity.x, y:this.entity.y, z:this.entity.h / WALL_HEIGHT}, va, ang * (180/PI));
         let dim = 1;
-        let d = 1 / (pos.t ** 2);
+        let d = pos.t + 0.1;
         pos.x = (pos.x % 1 + 1) % 1;
         pos.y = (pos.y % 1 + 1) % 1;
+        let B = 1 / (d ** 2) + 0.1;
 
         // Stretch image
         let txrcol = this.txr[
@@ -221,9 +222,9 @@ class Renderer {
           Math.round((this.txr[0].length - 1) * pos.y)
         ];
 
-        this.graphic.pixels[pxi+0] = txrcol[0] * d * 0.5;
-        this.graphic.pixels[pxi+1] = txrcol[1] * d * 0.5;
-        this.graphic.pixels[pxi+2] = txrcol[2] * d * 0.5;
+        this.graphic.pixels[pxi+0] = txrcol[0] * B * 0.5;
+        this.graphic.pixels[pxi+1] = txrcol[1] * B * 0.5;
+        this.graphic.pixels[pxi+2] = txrcol[2] * B * 0.5;
         this.graphic.pixels[pxi+3] = 255;
       }
       
