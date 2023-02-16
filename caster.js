@@ -9,6 +9,7 @@ class Player {
     this.fov = 90;
     this.far = 100;
     this.h = 100;
+    this.s = 1;
   }
   
   isColliding(px, py) {
@@ -38,7 +39,7 @@ class Player {
   
   actions() {
     const ROT_SPEED = 0.05 * deltaTime / 16;
-    const MOV_SPEED = 0.05 * deltaTime / 16;
+    const MOV_SPEED = 0.05 * deltaTime / 16 * this.s;
     const px = this.x;
     const py = this.y;
     
