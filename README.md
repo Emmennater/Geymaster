@@ -1,5 +1,5 @@
 # Raycaster
- Prove ur gaymer abilities.
+ Simple raycaster made in p5js.
 <br><br>
 # Controls
 - <b>Movement And Look</b>
