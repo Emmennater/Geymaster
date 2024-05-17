@@ -1,4 +1,4 @@
-# Gaycaster
+# Raycaster
  Prove ur gaymer abilities.
 <br><br>
 # Controls
